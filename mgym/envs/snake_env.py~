@@ -58,8 +58,6 @@ class SnakeEnv(mgym.MEnv):
             self.apples.append(Apple(*location))
 
         self.update_grid()
-        
-        return self.grid
 
     def create_boarder(self):
         self.walls = []

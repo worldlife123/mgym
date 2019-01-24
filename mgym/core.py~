@@ -2,7 +2,6 @@ import gym
 import logging
 #
 
-logger = logging.getLogger("mgym")
 
 class MEnv(object):
     """
