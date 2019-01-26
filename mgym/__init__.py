@@ -40,3 +40,13 @@ register(
     id='Snake-v0',
     entry_point='mgym.envs:SnakeEnv',
 )
+
+register(
+    id='BattleTank-v0',
+    entry_point='mgym.envs:BattleTankEnv',
+)
+
+register(
+    id='BattleTankSP-v0',
+    entry_point='mgym.envs:BattleTankSPEnv',
+)
