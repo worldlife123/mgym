@@ -43,15 +43,18 @@ class SnakeEnv(mgym.MEnv):
         self.action_space = spaces.Tuple(
             [spaces.Discrete(self.nA) for _ in range(self.N)])
         self.grid = np.zeros((GRID_HEIGHT, GRID_WIDTH))
+        self.colored_grid = np.zeros((GRID_HEIGHT, GRID_WIDTH))
         self.apples = []
         self.snakes = []
         self.walls = []
+        self.scores = []
         self.create_boarder()
 
         for i in range(N):
             snake_id = 3 + i
             location = self._get_empty_location()
             self.snakes.append(Snake(*location, snake_id))
+            self.scores.append(1)
 
         for i in range(NUM_APPLES):
             location = self._get_empty_location()
@@ -60,6 +63,9 @@ class SnakeEnv(mgym.MEnv):
         self.update_grid()
         
         return self.grid
+
+    def seed(self, seed=None):
+        random.seed(seed)
 
     def create_boarder(self):
         self.walls = []
@@ -107,16 +113,19 @@ class SnakeEnv(mgym.MEnv):
 
         if not self._alive_snakes():
             self.done = True
-            print('\n')
-            print('*******************')
-            print('**** GAME OVER ****')
-            print('******************* \n')
+#            print('\n')
+#            print('*******************')
+#            print('**** GAME OVER ****')
+#            print('******************* \n')
 
         self.update_grid()
 
-        rewards = [len(snake.tail) for snake in self.snakes]
+        new_scores = [len(snake.tail) for snake in self.snakes]
+        
+        rewards = [(new_scores[i] - self.scores[i]) for i in range(self.N)]
+        self.scores = new_scores
 
-        return self.grid, rewards, self.done, {}
+        return self.colored_grid, rewards, self.done, {}
 
     def remove_dead_snakes(self):
         restricted_sites = set()
@@ -130,10 +139,10 @@ class SnakeEnv(mgym.MEnv):
 
         for snake in self._alive_snakes():
             if (snake.x, snake.y) in restricted_sites:
-                print('SNAKE {} DIED!'.format(snake.id - 2))
+#                print('SNAKE {} DIED!'.format(snake.id - 2))
                 snake.alive = False
 
-    def render(self):
+    def render(self, mode='human'):
         for row in range(0, GRID_HEIGHT):
             for col in range(0, GRID_WIDTH):
                 if self.grid[row, col] == APPLE_ID:
@@ -152,10 +161,13 @@ class SnakeEnv(mgym.MEnv):
         for snake in self._alive_snakes():
             for tail_piece in snake.tail:
                 self.grid[tail_piece[0], tail_piece[1]] = snake.id
+                self.colored_grid[tail_piece[0], tail_piece[1]] = int((snake.id - 3) / self.N * (255 - MIN_COLOR) + MIN_COLOR)
         for apple in self.apples:
             self.grid[apple.x, apple.y] = apple.id
+            self.colored_grid[apple.x, apple.y] = APPLE_COLOR
         for wall in self.walls:
             self.grid[wall.x, wall.y] = wall.id
+            self.colored_grid[wall.x, wall.y] = WALL_COLOR
 
     def _alive_snakes(self):
         return [snake for snake in self.snakes if snake.alive]
@@ -260,7 +272,8 @@ class Snake(object):
 
 
 MIN_COLOR = 50
-
+APPLE_COLOR = 30
+WALL_COLOR = 15
 
 class Window(pyglet.window.Window):
     def __init__(self):
