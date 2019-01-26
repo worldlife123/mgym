@@ -55,6 +55,7 @@ class BattleTankEnv(mgym.MEnv):
 
     def __init__(self):
         self.N = None  # set in reset function
+        self.observation_space = spaces.Box(low=0, high=255, shape=(GRID_HEIGHT, GRID_WIDTH, 3), dtype=np.uint8)
 
     def reset(self, N=2):
         if N>MAX_TANKS: 
@@ -64,7 +65,7 @@ class BattleTankEnv(mgym.MEnv):
         self.N = N
         self.nA = 4
         self.nSteps = 0
-        self.observation_space = spaces.Box(low=0, high=255, shape=(GRID_HEIGHT, GRID_WIDTH, 3), dtype=np.uint8)
+        
         self.action_space = spaces.Tuple(
             [spaces.Discrete(self.nA) for _ in range(self.N)])
         self.grid = np.zeros((GRID_HEIGHT, GRID_WIDTH), dtype=np.int)
@@ -136,7 +137,7 @@ class BattleTankEnv(mgym.MEnv):
                 self.tanks[bullet_at_grid-TANK_ID_MIN].alive = False
                 new_scores[bullet.fireById-TANK_ID_MIN] += TANK_HIT_SCORE
                 new_scores[bullet_at_grid-TANK_ID_MIN] += TANK_DESTROYED_SCORE
-                print("id %d destroyed!" % bullet_at_grid)
+                # print("id %d destroyed!" % bullet_at_grid)
                 destroyed_bullets.append(bullet)
 
         #remove destroyed bullets
@@ -165,7 +166,6 @@ class BattleTankEnv(mgym.MEnv):
         self.scores = new_scores
 
         self.nSteps += 1
-        print(rewards)
 
         return self.colored_grid, rewards, self.done, {}
 
@@ -250,11 +250,15 @@ class BattleTankSPEnv(BattleTankEnv):
         self.aiStrategyId = random.choice(range(len(self._AI_STRATEGIES)))
         self.aiStrategy = self._AI_STRATEGIES[self.aiStrategyId]
         self.aiStrategySteps = 0
-        return super().reset(2)
+        ret = super().reset(2)
+        self.action_space = spaces.Discrete(self.nA)
+
+        return ret
 
     def step(self, action):
         self.aiStrategySteps += 1
-        return super().step((action, self.aiAction()))
+        obs, reward, done, info = super().step((action, self.aiAction()))
+        return obs, reward[0], done, info
         
 
     def aiAction(self):
