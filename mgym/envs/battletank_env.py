@@ -135,7 +135,7 @@ class BattleTankEnv(mgym.MEnv):
                 is_bullet_destroyed = True
                 self.tanks[bullet_at_grid-TANK_ID_MIN].alive = False
                 new_scores[bullet.fireById-TANK_ID_MIN] += TANK_HIT_SCORE
-                new_scores[bullet_at_grid-TANK_ID_MIN] -= TANK_DESTROYED_SCORE
+                new_scores[bullet_at_grid-TANK_ID_MIN] += TANK_DESTROYED_SCORE
                 print("id %d destroyed!" % bullet_at_grid)
                 destroyed_bullets.append(bullet)
 
@@ -165,6 +165,7 @@ class BattleTankEnv(mgym.MEnv):
         self.scores = new_scores
 
         self.nSteps += 1
+        print(rewards)
 
         return self.colored_grid, rewards, self.done, {}
 
